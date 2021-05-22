@@ -18,7 +18,7 @@ struct Session {
 
 std::unordered_map<uint16_t, Session> manager;
 
-std::string reorder(const std::map<uint32_t, std::string> & cache) {
+std::string assemble(const std::map<uint32_t, std::string> & cache) {
     std::vector<std::string_view> t;
     t.reserve(cache.size());
 
@@ -94,14 +94,14 @@ bool process(const char *packet, size_t size) {
         if (tcp->syn && tcp->ack) {
             manager.emplace(dst_port, Session{});
         } else if (tcp->rst && session_iter != manager.end()) {
-            report(dst_port, reorder(session_iter->second.cache));
+            report(dst_port, assemble(session_iter->second.cache));
             manager.erase(session_iter);
         }
     } else if (dst_port == 8888) {
         session_iter = manager.find(src_port);
 
         if (session_iter != manager.end() && tcp->fin) {
-            report(src_port, reorder(session_iter->second.cache));
+            report(src_port, assemble(session_iter->second.cache));
             manager.erase(session_iter);
         } else if (session_iter != manager.end() && len > 0) {
             auto seq = ntohl(tcp->seq);
